@@ -1,0 +1,380 @@
+{# ─────────────────────────────────────────────────────────────────────────── #}
+{# Jinja2 template for THE AI PULSE newsletter                                  #}
+{# All variables are injected from NewsletterState + config constants           #}
+{# ─────────────────────────────────────────────────────────────────────────── #}
+
+{# Helper macro: render a sentiment bar out of 10 blocks #}
+{% macro sentiment_bar(score) -%}
+{%- set filled = (score // 10) | int -%}
+{%- set empty = 10 - filled -%}
+{{ "█" * filled }}{{ "░" * empty }}  {{ score }}%
+{%- endmacro %}
+
+# ⚡ {{ newsletter_name }}
+### *Your Weekly Intelligence Briefing on All Things AI*
+
+**Issue #{{ issue_number }} · Week of {{ week_label }}** | *{{ newsletter_author }}*
+
+---
+
+{% if ai_quotes %}
+> *"{{ ai_quotes[0].quote }}"*
+> — **{{ ai_quotes[0].speaker }}**, {{ ai_quotes[0].title }}
+{% else %}
+> *"AI is not going to replace humans, but humans who use AI will replace humans who don't."*
+> — **Anonymous**
+{% endif %}
+
+---
+
+## 👋 EDITOR'S NOTE
+
+{{ editors_note }}
+
+**This week inside:**
+{% for story in top_news[:3] %}
+- 🔥 {{ story.title }}
+{% endfor %}
+{% if research_papers %}
+- 🧠 {{ research_papers[0].title }}
+{% endif %}
+{% if new_tools %}
+{% set featured_tool = new_tools | selectattr("is_featured", "equalto", true) | first | default(new_tools[0]) %}
+- 🛠️ Tool of the Week: **{{ featured_tool.name }}**
+{% endif %}
+{% if deep_dive_title %}
+- 📊 Deep Dive: {{ deep_dive_title }}
+{% endif %}
+
+---
+
+## 🔥 TOP AI NEWS OF THE WEEK
+
+*The headlines that actually mattered — curated, contextualized, no fluff.*
+
+---
+
+{% if top_news %}
+{% set icons = ["🏆", "🤖", "💼", "⚖️", "🌍"] %}
+{% for story in top_news %}
+### {{ loop.index }}. {{ icons[loop.index0] if loop.index0 < icons|length else "📰" }} {{ story.title }}
+**Source:** {{ story.source }} · **Date:** {{ story.date }}
+
+**What happened:**
+{{ story.summary }}
+
+**Why it matters:**
+{{ story.why_it_matters }}
+
+**🔗 Read more:** [Read the full story]({{ story.url }})
+
+---
+{% endfor %}
+{% else %}
+*No top news stories collected this week.*
+
+---
+{% endif %}
+
+### ⚡ QUICK HITS
+*Smaller stories worth knowing about:*
+
+| Story | Source | Takeaway |
+|---|---|---|
+{% if quick_hits %}
+{% for hit in quick_hits %}
+| [{{ hit.title }}]({{ hit.url }}) | {{ hit.source }} | {{ hit.one_liner }} |
+{% endfor %}
+{% else %}
+| *No quick hits this week* | — | — |
+{% endif %}
+
+---
+
+## 🧠 RESEARCH PAPERS OF THE WEEK
+
+*The most important papers from arXiv and top labs — explained in plain English.*
+
+---
+
+{% set featured_papers = research_papers | selectattr("is_featured", "equalto", true) | list %}
+{% set extra_papers = research_papers | selectattr("is_featured", "equalto", false) | list %}
+
+{% if featured_papers %}
+{% for paper in featured_papers[:3] %}
+### 📄 Paper #{{ loop.index }} — {{ paper.title }}
+**Authors:** {{ paper.authors }} · **Category:** {{ paper.primary_category }}
+**Published:** {{ paper.published }} · **arXiv:** [Link]({{ paper.arxiv_url }})
+
+**🔬 What it's about:**
+{{ paper.what_its_about }}
+
+**💡 Key findings:**
+{% for finding in paper.key_findings %}
+- {{ finding }}
+{% endfor %}
+
+**🚀 Real-world impact:**
+{{ paper.real_world_impact }}
+
+---
+{% endfor %}
+{% else %}
+*No featured research papers found this week.*
+
+---
+{% endif %}
+
+{% if extra_papers %}
+### 📚 MORE PAPERS WORTH READING
+
+| Paper | Authors | TL;DR |
+|---|---|---|
+{% for paper in extra_papers %}
+| [{{ paper.title[:60] }}{% if paper.title|length > 60 %}...{% endif %}]({{ paper.arxiv_url }}) | {{ paper.authors }} | {{ paper.tldr }} |
+{% endfor %}
+
+---
+{% endif %}
+
+## 🛠️ NEW AI TOOLS & PRODUCT LAUNCHES
+
+*Hot new tools dropped this week — here's what's worth your time.*
+
+---
+
+{% set featured_tool = new_tools | selectattr("is_featured", "equalto", true) | first | default(none) %}
+{% if featured_tool %}
+### 🌟 Tool of the Week: {{ featured_tool.name }}
+**By:** {{ featured_tool.company }} · **Category:** {{ featured_tool.category }}
+**Pricing:** {{ featured_tool.pricing }} · **Link:** [Try it here]({{ featured_tool.url }})
+
+**What it does:**
+{{ featured_tool.description }}
+
+**Why we love it:**
+{{ featured_tool.why_we_love_it }}
+
+**Best for:** {{ featured_tool.best_for }}
+
+---
+{% else %}
+*No featured tool selected this week.*
+
+---
+{% endif %}
+
+{% set table_tools = new_tools | selectattr("is_featured", "equalto", false) | list %}
+{% if table_tools %}
+### 🔧 More Tools Launched This Week
+
+| Tool | Category | What It Does | Pricing | Link |
+|---|---|---|---|---|
+{% for tool in table_tools %}
+| **{{ tool.name }}** | {{ tool.category }} | {{ tool.one_liner }} | {{ tool.pricing }} | [Link]({{ tool.url }}) |
+{% endfor %}
+
+---
+{% endif %}
+
+## 📊 DEEP DIVE: ANALYSIS & OPINION
+
+*One big idea unpacked — context, nuance, and what it means for you.*
+
+---
+
+### 🎯 {{ deep_dive_title }}
+
+{{ deep_dive_content }}
+
+---
+
+## 🏭 AI IN THE REAL WORLD
+
+*How companies and industries are actually using AI right now.*
+
+---
+
+{% if industry_usecases %}
+| Industry | Use Case | Company | Outcome |
+|---|---|---|---|
+{% for uc in industry_usecases %}
+| {{ uc.industry }} | {{ uc.use_case[:50] }} | {{ uc.company }} | {{ uc.outcome[:80] }} |
+{% endfor %}
+{% else %}
+| Industry | Use Case | Company | Outcome |
+|---|---|---|---|
+| Technology | AI adoption accelerating | Multiple | Productivity gains across sectors |
+{% endif %}
+
+---
+
+## 💬 VOICES & OPINIONS
+
+*What the smartest people in AI are saying this week.*
+
+---
+
+{% if ai_quotes %}
+{% for q in ai_quotes %}
+> *"{{ q.quote }}"*
+> — **{{ q.speaker }}**, {{ q.title }}{% if q.source_url %} · [Source]({{ q.source_url }}){% endif %}
+
+{% endfor %}
+{% else %}
+> *"The question is not whether AI will change everything — it already has. The question is whether we're changing fast enough to keep up."*
+> — **Anonymous AI Researcher**
+{% endif %}
+
+---
+
+## 💬 PROMPT OF THE WEEK
+
+*A ready-to-use prompt you can try right now with ChatGPT, Claude, Gemini, or any LLM.*
+
+---
+
+**🎯 This Week's Category:** {{ prompt_category }}
+
+**Use Case:** {{ prompt_use_case }}
+
+```
+{{ prompt_of_the_week }}
+```
+
+**💡 Pro tip:** {{ prompt_pro_tip }}
+
+---
+
+## 📈 AI NUMBERS OF THE WEEK
+
+*Data points that tell the bigger story.*
+
+---
+
+{% if ai_stats %}
+| Metric | Number | Context |
+|---|---|---|
+{% for stat in ai_stats %}
+| {{ stat.metric[:40] }} | {{ stat.number }} | {{ stat.context[:100] }} |
+{% endfor %}
+{% else %}
+| Metric | Number | Context |
+|---|---|---|
+| AI market size | $200B+ | Global AI market projected to exceed $200 billion by 2026 |
+| Developers using AI tools | 70%+ | Majority of developers now use AI coding assistants |
+| Enterprise AI adoption | 55% | More than half of enterprises have deployed AI in production |
+{% endif %}
+
+---
+
+## 🎓 LEARNING & RESOURCES
+
+*Curated picks to level up your AI knowledge this week.*
+
+---
+
+{% if youtube_videos %}
+{% set must_watch = youtube_videos | selectattr("category", "equalto", "must_watch") | first | default(none) %}
+{% set tutorial = youtube_videos | selectattr("category", "equalto", "tutorial") | first | default(none) %}
+{% set explainer = youtube_videos | selectattr("category", "equalto", "explainer") | first | default(none) %}
+
+{% if must_watch %}
+### 📹 Must-Watch Video
+**[{{ must_watch.title }}]({{ must_watch.url }})** — {{ must_watch.channel }}
+{{ must_watch.why_watch }}
+{% if must_watch.duration != "N/A" %}⏱ Duration: {{ must_watch.duration }}{% endif %}
+🔗 [Watch here]({{ must_watch.url }})
+
+{% endif %}
+{% if tutorial %}
+### 🛠️ Must-Watch Tutorial
+**[{{ tutorial.title }}]({{ tutorial.url }})** — {{ tutorial.channel }}
+{{ tutorial.why_watch }}
+{% if tutorial.duration != "N/A" %}⏱ Duration: {{ tutorial.duration }}{% endif %}
+🔗 [Watch here]({{ tutorial.url }})
+
+{% endif %}
+{% if explainer %}
+### 🔬 Research Explainer
+**[{{ explainer.title }}]({{ explainer.url }})** — {{ explainer.channel }}
+{{ explainer.why_watch }}
+{% if explainer.duration != "N/A" %}⏱ Duration: {{ explainer.duration }}{% endif %}
+🔗 [Watch here]({{ explainer.url }})
+
+{% endif %}
+{% else %}
+*No video resources collected this week. Check YouTube for the latest AI content.*
+{% endif %}
+
+---
+
+## 💼 AI JOBS OF THE WEEK
+
+*Top AI roles across companies — for builders, researchers, and strategists.*
+
+---
+
+{% if jobs %}
+| Role | Company | Location | Type | Link |
+|---|---|---|---|---|
+{% for job in jobs %}
+| {{ job.role[:50] }} | {{ job.company }} | {{ job.location }} | {{ job.type }} | [Apply]({{ job.url }}) |
+{% endfor %}
+{% else %}
+| Role | Company | Location | Type | Link |
+|---|---|---|---|---|
+| *Check job boards for current AI openings* | — | Remote / Global | — | — |
+{% endif %}
+
+---
+
+## 📅 UPCOMING EVENTS & CONFERENCES
+
+*Don't miss these AI events in the coming weeks.*
+
+---
+
+{% if events %}
+| Event | Date | Location | Link |
+|---|---|---|---|
+{% for event in events %}
+| {{ event.name[:50] }} | {{ event.date }} | {{ event.location }} | [Register]({{ event.url }}) |
+{% endfor %}
+{% else %}
+| Event | Date | Location | Link |
+|---|---|---|---|
+| *Check AI event calendars for upcoming conferences* | TBD | Global | — |
+{% endif %}
+
+---
+
+## 🌡️ AI SENTIMENT METER
+
+*The community mood this week — how are researchers, developers, and the public feeling about AI?*
+
+---
+
+```
+Hype Level:      {{ sentiment_bar(sentiment_hype) }}  🔥
+Concern Level:   {{ sentiment_bar(sentiment_concern) }}  😟
+Optimism:        {{ sentiment_bar(sentiment_optimism) }}  😊
+Skepticism:      {{ sentiment_bar(sentiment_skepticism) }}  🤔
+```
+
+**Editor's read:** {{ sentiment_summary }}
+
+---
+
+## ✍️ CLOSING THOUGHTS
+
+{{ closing_thoughts }}
+
+---
+
+*Thanks for reading **{{ newsletter_name }}** — Issue #{{ issue_number }}.*
+*If this was useful, forward it to one person who'd love it. That's how we grow. 🙏*
+
+---
+
+*© {{ newsletter_name }}. All rights reserved.*
